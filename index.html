@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing App</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #e0e0e0;
+            margin: 0;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+        .main {
+            padding: 40px;
+            border-radius: 50px;
+            background-color: #e0e0e0;
+            box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 30px;
+            background-color: #e0e0e0;
+            box-shadow: inset 10px 10px 20px #bebebe, inset -10px -10px 20px #ffffff;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+        input[type="file"]:hover {
+            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+        }
+        img {
+            margin: 20px 0;
+            max-width: 200px;
+            display: none;
+            border-radius: 20px;
+            box-shadow: 10px 10px 30px #bebebe, -10px -10px 30px #ffffff;
+        }
+        button {
+            padding: 10px 30px;
+            margin: 20px 0;
+            border-radius: 30px;
+            background-color: #e0e0e0;
+            box-shadow: 10px 10px 20px #bebebe, -10px -10px 20px #ffffff;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            transition: box-shadow 0.3s ease;
+        }
+        button:hover {
+            box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
+        }
+        button:disabled {
+            background-color: #dcdcdc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        #predictions {
+            margin-top: 20px;
+            max-width: 400px;
+            text-align: center;
+        }
+        .prediction {
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 10px 10px 30px #bebebe, -10px -10px 30px #ffffff;
+        }
+        #loading {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <main class="main">
+        <h1>Image Processing App</h1>
+        <input type="file" accept="image/*" id="imageInput" />
+        <button id="classifyButton" style="display: none;" disabled>Classify Image</button>
+        <img id="selectedImage" alt="Selected" />
+        <div id="predictions"></div>
+        <div id="loading">Loading model...</div>
+    </main>
+    <script>
+        let model;
+        let selectedImage;
+
+        // Load the MobileNet model
+        async function loadModel() {
+            try {
+                document.getElementById('loading').style.display = 'block'; // Show loading indicator
+                model = await mobilenet.load();
+                console.log('Model loaded');
+                document.getElementById('loading').style.display = 'none'; // Hide loading indicator
+                document.getElementById('classifyButton').disabled = false; // Enable classify button
+            } catch (error) {
+                console.error('Error loading model:', error);
+                document.getElementById('loading').innerText = 'Error loading model. Please try again.';
+            }
+        }
+
+        // Process the image and classify it
+        async function processImage(imageElement) {
+            if (!model) {
+                console.error('Model is not loaded.');
+                return;
+            }
+            try {
+                const predictions = await model.classify(imageElement);
+                const predictionsDiv = document.getElementById('predictions');
+                predictionsDiv.innerHTML = predictions.map(p => 
+                    `<div class="prediction">${p.className}: ${(p.probability * 100).toFixed(2)}%</div>`
+                ).join('');
+            } catch (error) {
+                console.error('Error classifying image:', error);
+            }
+        }
+
+        // Handle image input change
+        document.getElementById('imageInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const imageUrl = URL.createObjectURL(file);
+                selectedImage = document.getElementById('selectedImage');
+                selectedImage.src = imageUrl;
+                selectedImage.style.display = 'block';
+                document.getElementById('classifyButton').style.display = 'block'; // Show the classify button
+            }
+        });
+
+        // Handle button click to classify image
+        document.getElementById('classifyButton').addEventListener('click', async () => {
+            if (selectedImage) {
+                await processImage(selectedImage);
+            }
+        });
+
+        // Load the model when the page loads
+        loadModel();
+    </script>
+</body>
+</html>

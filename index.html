@@ -16,17 +16,30 @@
             height: 100vh;
             background-color: #e0e0e0;
             margin: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        body.dark-mode {
+            background-color: #333;
+            color: #f4f4f5;
         }
         h1 {
             color: #333;
             margin-bottom: 20px;
             font-size: 2em;
         }
+        h1.dark-mode {
+            color: #f4f4f5;
+        }
         .main {
             padding: 40px;
             border-radius: 50px;
-            background-color: #e0e0e0;
+            background-color: #E0E0E0;
             box-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+            transition: background-color 0.3s ease;
+        }
+        .main.dark-mode {
+            background-color: #555;
+            box-shadow: 20px 20px 60px #2c2c2c, -20px -20px 60px #555555;
         }
         input[type="file"] {
             margin: 20px 0;
@@ -37,15 +50,9 @@
             cursor: pointer;
             transition: box-shadow 0.3s ease;
         }
-        input[type="file"]:hover {
-            box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
-        }
-        img {
-            margin: 20px 0;
-            max-width: 200px;
-            display: none;
-            border-radius: 20px;
-            box-shadow: 10px 10px 30px #bebebe, -10px -10px 30px #ffffff;
+        input[type="file"].dark-mode {
+            background-color: #555;
+            box-shadow: inset 10px 10px 20px #444, inset -10px -10px 20px #666;
         }
         button {
             padding: 10px 30px;
@@ -58,13 +65,9 @@
             font-size: 1em;
             transition: box-shadow 0.3s ease;
         }
-        button:hover {
-            box-shadow: 5px 5px 10px #bebebe, -5px -5px 10px #ffffff;
-        }
-        button:disabled {
-            background-color: #dcdcdc;
-            box-shadow: none;
-            cursor: not-allowed;
+        button.dark-mode {
+            background-color: #555;
+            box-shadow: 10px 10px 20px #444, -10px -10px 20px #666;
         }
         #predictions {
             margin-top: 20px;
@@ -78,16 +81,76 @@
             margin: 10px 0;
             box-shadow: 10px 10px 30px #bebebe, -10px -10px 30px #ffffff;
         }
+        .prediction.dark-mode {
+            background-color: #555;
+            box-shadow: 10px 10px 30px #444, -10px -10px 30px #666;
+        }
         #loading {
             display: none;
             margin-top: 20px;
             font-size: 1.2em;
             color: #666;
         }
+        /* Dark mode styles */
+        #loading.dark-mode {
+            color: #ccc;
+        }
+        /* Switch styles */
+        .switch {
+          display: block;
+          --width-of-switch: 3.5em;
+          --height-of-switch: 2em;
+          --size-of-icon: 1.4em;
+          --slider-offset: 0.3em;
+          position: relative;
+          width: var(--width-of-switch);
+          height: var(--height-of-switch);
+        }
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #f4f4f5;
+          transition: .4s;
+          border-radius: 30px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: var(--size-of-icon,1.4em);
+          width: var(--size-of-icon,1.4em);
+          border-radius: 20px;
+          left: var(--slider-offset,0.3em);
+          top: 50%;
+          transform: translateY(-50%);
+          background: linear-gradient(40deg,#ff0080,#ff8c00 70%);
+          transition: .4s;
+        }
+        input:checked + .slider {
+          background-color: #303136;
+        }
+        input:checked + .slider:before {
+          left: calc(100% - (var(--size-of-icon,1.4em) + var(--slider-offset,0.3em)));
+          background: #303136;
+          box-shadow: inset -3px -2px 5px -2px #8983f7, inset -10px -4px 0 0 #a3dafb;
+        }
     </style>
 </head>
 <body>
     <main class="main">
+    
+<label class="switch">
+    <input type="checkbox" id="darkModeToggle">
+    <span class="slider"></span>
+</label>
         <h1>Image Processing App</h1>
         <input type="file" accept="image/*" id="imageInput" />
         <button id="classifyButton" style="display: none;" disabled>Classify Image</button>
@@ -146,6 +209,34 @@
         document.getElementById('classifyButton').addEventListener('click', async () => {
             if (selectedImage) {
                 await processImage(selectedImage);
+            }
+        });
+
+        // Dark mode toggle functionality
+        const toggleSwitch = document.getElementById('darkModeToggle');
+
+        function switchMode(isDark) {
+            document.body.classList.toggle('dark-mode', isDark);
+            document.querySelectorAll('.main, button, input[type="file"], .prediction, h1, #loading').forEach(element => {
+                element.classList.toggle('dark-mode', isDark);
+            });
+            localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
+        }
+
+        // Load dark mode preference from localStorage
+        const darkModePreference = localStorage.getItem('darkMode');
+
+        if (darkModePreference === 'enabled') {
+            toggleSwitch.checked = true;
+            switchMode(true); // Apply dark mode
+        }
+
+        // Toggle event listener for the dark mode switch
+        toggleSwitch.addEventListener('change', (event) => {
+            if (event.target.checked) {
+                switchMode(true); // Enable dark mode
+            } else {
+                switchMode(false); // Disable dark mode
             }
         });
 
